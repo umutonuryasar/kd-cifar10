@@ -1,7 +1,10 @@
-"""ResNet-18 and ResNet-50 for CIFAR-10 Knowledge Distillation.
+"""CIFAR-10 ResNet with forward hooks for Knowledge Distillation.
 
-Both models expose intermediate feature maps for Feature-KD via
-forward hooks stored in self.features after each forward pass.
+Critical modification: replaces the ImageNet-oriented 7×7 conv (stride=2)
+and MaxPool with a 3×3 conv (stride=1) and Identity. This prevents aggressive
+spatial downsampling of 32×32 CIFAR images.
+
+Feature hooks on layer1–layer4 expose intermediate activations for Feature-KD.
 """
 
 import torch
@@ -10,14 +13,6 @@ import torchvision.models as tv_models
 
 
 class ResNet(nn.Module):
-    """Wrapper around torchvision ResNet with CIFAR-10 head and feature hooks.
-
-    Args:
-        variant:   'resnet18' (student) or 'resnet50' (teacher).
-        num_classes: Number of output classes (default: 10 for CIFAR-10).
-        pretrained:  Load ImageNet pretrained weights.
-    """
-
     def __init__(
         self,
         variant: str = "resnet18",
@@ -37,6 +32,10 @@ class ResNet(nn.Module):
         else:
             raise ValueError(f"Unsupported variant: {variant}")
 
+        # CIFAR-10 modification: prevent aggressive downsampling
+        base.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
+        base.maxpool = nn.Identity()
+
         # Replace final FC for CIFAR-10
         in_features = base.fc.in_features
         base.fc = nn.Linear(in_features, num_classes)
@@ -46,8 +45,7 @@ class ResNet(nn.Module):
         self._register_hooks()
 
     def _register_hooks(self) -> None:
-        """Attach forward hooks to layer2, layer3, layer4 for Feature-KD."""
-        for name in ("layer2", "layer3", "layer4"):
+        for name in ("layer1", "layer2", "layer3", "layer4"):
             layer = getattr(self.model, name)
             layer.register_forward_hook(self._make_hook(name))
 
