@@ -209,9 +209,3 @@ kd-cifar10/
 4. He, K., et al. (2016). *Deep Residual Learning for Image Recognition.* CVPR.
 
 ---
-
-## Author
-
-**Umut Onur Yasar** — Applied AI Researcher
-
-[GitHub](https://github.com/umutonuryasar) · [Website](https://umutonuryasar.com) · [Kaggle](https://www.kaggle.com/umutonuryasar)
