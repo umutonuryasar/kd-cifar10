@@ -60,7 +60,7 @@ on projected features and cosine similarity on globally pooled representations.
 
 ---
 
-## Ablation Grid
+## Results
 
 ### Experiment 1 — Standard Architecture
 
@@ -71,31 +71,39 @@ on projected features and cosine similarity on globally pooled representations.
 | Logit α=0.3 T=4 | 88.83% | -0.15% | -0.98% |
 | Logit α=0.5 T=4 | 88.88% | -0.10% | -0.93% |
 | Logit α=0.7 T=4 | 88.68% | -0.30% | -1.13% |
-| Logit α=0.5 T=2 | **88.94%** | -0.04% | -0.87% |
+| **Logit α=0.5 T=2** | **88.94%** | **-0.04%** | **-0.87%** |
 | Logit α=0.5 T=8 | 88.72% | -0.26% | -1.09% |
 | Feature α=0.3 | 88.18% | -0.80% | -1.63% |
 | Feature α=0.5 | 88.62% | -0.36% | -1.19% |
 | Feature α=0.7 | 88.62% | -0.36% | -1.19% |
 
-**Finding:** With a small teacher-student gap (0.83%), KD does not consistently
+**Key finding:** With a small teacher-student gap (0.83%), KD does not consistently
 outperform the baseline. Teacher quality is the primary bottleneck.
 
 ### Experiment 2 — CIFAR-Specific Architecture
 
-*Results coming soon.*
+Architecture fix: `7×7 conv (stride=2) + MaxPool` → `3×3 conv (stride=1) + Identity`.
+This raises teacher accuracy by +5.59pp, creating a meaningful teacher-student gap.
 
 | Config | Best Acc | Δ Baseline | Δ Teacher |
 |---|---|---|---|
-| Teacher (ResNet-50) | TBD | — | — |
-| Baseline (ResNet-18) | TBD | — | — |
-| Logit α=0.3 T=2 | TBD | TBD | TBD |
-| Logit α=0.5 T=2 | TBD | TBD | TBD |
-| Logit α=0.7 T=2 | TBD | TBD | TBD |
-| Logit α=0.5 T=3 | TBD | TBD | TBD |
-| Logit α=0.5 T=4 | TBD | TBD | TBD |
-| Feature α=0.3 | TBD | TBD | TBD |
-| Feature α=0.5 | TBD | TBD | TBD |
-| Feature α=0.7 | TBD | TBD | TBD |
+| Teacher (ResNet-50) | **95.40%** | — | — |
+| Baseline (ResNet-18) | 94.97% | — | -0.43% |
+| Logit α=0.3 T=2 | 95.37% | +0.40% | -0.03% |
+| Logit α=0.5 T=2 | 95.35% | +0.38% | -0.05% |
+| Logit α=0.7 T=2 | 95.40% | +0.43% | +0.00% |
+| Logit α=0.5 T=3 | 95.41% | +0.44% | +0.01% |
+| **Logit α=0.5 T=4** | **95.47%** | **+0.50%** | **+0.07%** |
+| Feature α=0.3 | 95.02% | +0.05% | -0.38% |
+| Feature α=0.5 | 95.01% | +0.04% | -0.39% |
+| Feature α=0.7 | 95.23% | +0.26% | -0.17% |
+
+**Key findings:**
+1. **KD outperforms baseline** in all Logit-KD configurations — architecture fix was critical.
+2. **Logit-KD > Feature-KD** consistently across both experiments.
+3. **T=4 optimal** with CIFAR-specific architecture (vs T=2 in Exp 1) — stronger teacher benefits from softer targets.
+4. **α effect is small** (+0.001 range) — teacher-student gap still modest at 0.43%.
+5. **Architecture dominates KD** — the 5.59pp gain from architecture fix dwarfs KD gains (~0.5pp).
 
 ---
 
@@ -122,28 +130,28 @@ data/
 ## Usage
 
 ```bash
-# Train teacher
+# Train teacher (CIFAR-specific architecture)
 python tools/train.py \
     --model resnet50 --kd-type none \
-    --epochs 100 --output-dir runs/teacher_r50
+    --epochs 100 --output-dir runs/teacher_r50_v2
 
 # Train baseline student
 python tools/train.py \
     --model resnet18 --kd-type none \
-    --epochs 100 --output-dir runs/baseline
+    --epochs 100 --output-dir runs/baseline_v2
 
-# Logit-KD
+# Logit-KD (best config)
 python tools/train.py \
     --model resnet18 --kd-type logit \
-    --alpha 0.5 --temperature 2 \
-    --teacher-weights runs/teacher_r50/checkpoint_best.pth \
-    --output-dir runs/logit_a0.5_t2
+    --alpha 0.5 --temperature 4 \
+    --teacher-weights runs/teacher_r50_v2/checkpoint_best.pth \
+    --output-dir runs/logit_a0.5_t4
 
 # Feature-KD
 python tools/train.py \
     --model resnet18 --kd-type feature \
     --alpha 0.5 --feat-beta 0.5 \
-    --teacher-weights runs/teacher_r50/checkpoint_best.pth \
+    --teacher-weights runs/teacher_r50_v2/checkpoint_best.pth \
     --output-dir runs/feature_a0.5
 
 # Full ablation
@@ -201,3 +209,9 @@ kd-cifar10/
 4. He, K., et al. (2016). *Deep Residual Learning for Image Recognition.* CVPR.
 
 ---
+
+## Author
+
+**Umut Onur Yasar** — Applied AI Researcher
+
+[GitHub](https://github.com/umutonuryasar) · [Website](https://umutonuryasar.com) · [Kaggle](https://www.kaggle.com/umutonuryasar)

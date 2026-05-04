@@ -219,41 +219,46 @@ and makes Feature-KD ineffective (no useful spatial features to align).
 
 ---
 
-### Experiment 2 — CIFAR-Specific Architecture (TODO)
+### Experiment 2 — CIFAR-Specific Architecture (COMPLETED)
 
-**Hypothesis:** CIFAR-specific ResNet (3×3 conv, no maxpool) will:
-1. Raise teacher accuracy to ~94-95%
-2. Raise baseline student to ~92-93%
-3. Increase teacher-student gap → KD becomes meaningful
-4. Validate whether Logit-KD > Feature-KD holds with proper architecture
+**Change:** `7×7 conv (stride=2) + MaxPool` → `3×3 conv (stride=1) + Identity`
 
-**Ablation grid (informed by Experiment 1):**
+**Results:**
 
-Logit-KD α sweep (T=2, fixed — best from Exp 1):
+| Config | Best Acc | Δ Baseline | Δ Teacher |
+|---|---|---|---|
+| Teacher (ResNet-50) | **95.40%** | — | — |
+| Baseline (ResNet-18) | 94.97% | — | -0.43% |
+| Logit α=0.3 T=2 | 95.37% | +0.40% | -0.03% |
+| Logit α=0.5 T=2 | 95.35% | +0.38% | -0.05% |
+| Logit α=0.7 T=2 | 95.40% | +0.43% | +0.00% |
+| Logit α=0.5 T=3 | 95.41% | +0.44% | +0.01% |
+| **Logit α=0.5 T=4** | **95.47%** | **+0.50%** | **+0.07%** |
+| Feature α=0.3 | 95.02% | +0.05% | -0.38% |
+| Feature α=0.5 | 95.01% | +0.04% | -0.39% |
+| Feature α=0.7 | 95.23% | +0.26% | -0.17% |
 
-| Run | α   | T | Output dir          |
-|-----|-----|---|---------------------|
-| 1   | 0.3 | 2 | runs/logit_a0.3_t2  |
-| 2   | 0.5 | 2 | runs/logit_a0.5_t2  |
-| 3   | 0.7 | 2 | runs/logit_a0.7_t2  |
+**Key findings:**
+1. KD outperforms baseline in all Logit-KD configs — architecture fix was the bottleneck.
+2. Logit-KD > Feature-KD consistently (both experiments).
+3. T=4 optimal with CIFAR architecture (vs T=2 in Exp 1) — stronger teacher benefits from softer targets.
+4. α effect is small (~0.001 range) — teacher-student gap still modest at 0.43%.
+5. Architecture dominates: +5.59pp from fix vs ~0.5pp from KD.
 
-Logit-KD T sweep (α=0.5, fixed — best from Exp 1):
+**Output directories:**
 
-| Run | α   | T | Output dir          |
-|-----|-----|---|---------------------|
-| 4   | 0.5 | 2 | runs/logit_a0.5_t2  |
-| 5   | 0.5 | 3 | runs/logit_a0.5_t3  |
-| 6   | 0.5 | 4 | runs/logit_a0.5_t4  |
+| Run | α | T | Output dir |
+|---|---|---|---|
+| 1 | 0.3 | 2 | runs/logit_a0.3_t2 |
+| 2 | 0.5 | 2 | runs/logit_a0.5_t2_v2 |
+| 3 | 0.7 | 2 | runs/logit_a0.7_t2 |
+| 4 | 0.5 | 3 | runs/logit_a0.5_t3 |
+| 5 | 0.5 | 4 | runs/logit_a0.5_t4 |
+| 6 | 0.3 | — | runs/feature_a0.3 |
+| 7 | 0.5 | — | runs/feature_a0.5 |
+| 8 | 0.7 | — | runs/feature_a0.7 |
 
-Feature-KD α sweep:
-
-| Run | α   | β   | Output dir         |
-|-----|-----|-----|--------------------|
-| 7   | 0.3 | 0.5 | runs/feature_a0.3  |
-| 8   | 0.5 | 0.5 | runs/feature_a0.5  |
-| 9   | 0.7 | 0.5 | runs/feature_a0.7  |
-
-Note: Run 2 and Run 4 are identical — train once, reuse.
+Note: `logit_a0.5_t2_v2` distinguishes Exp 2 from the Exp 1 checkpoint in `logit_a0.5_t2`.
 
 ---
 
