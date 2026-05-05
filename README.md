@@ -194,7 +194,6 @@ kd-cifar10/
 │   └── run_ablation.sh        # Full ablation grid
 ├── notebooks/
 │   └── analysis.ipynb         # Result visualization
-├── CLAUDE.md                  # Implementation details for Claude Code
 └── README.md
 ```
 
