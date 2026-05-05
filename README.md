@@ -4,8 +4,7 @@ A systematic comparison of **Logit-KD** and **Feature-KD** strategies for compre
 ResNet-50 (teacher) into ResNet-18 (student) on CIFAR-10.
 
 > **Paper:** *Knowledge Distillation for Image Classification: A Systematic Ablation of
-> Logit-KD and Feature-KD on CIFAR-10* — [coming soon]
-
+> Logit-KD and Feature-KD on CIFAR-10* — [docs/CS229_Paper.pdf](docs/)
 ---
 
 ## Overview
