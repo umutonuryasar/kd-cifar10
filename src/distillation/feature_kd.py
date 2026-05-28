@@ -39,16 +39,12 @@ class FeatureKDLoss(nn.Module):
     """Multi-layer feature alignment KD loss.
 
     Args:
-        student_channels: Dict of layer -> channel count for student.
-        teacher_channels: Dict of layer -> channel count for teacher.
-        beta:             Weight for cosine similarity term.
-        layers:           Which ResNet stages to align.
+        beta:   Weight for cosine similarity term.
+        layers: Which ResNet stages to align.
     """
 
     def __init__(
         self,
-        student_channels: int = 512,   # kept for API compat, unused
-        teacher_channels: int = 2048,  # kept for API compat, unused
         beta: float = 0.5,
         layers: list[str] | None = None,
     ):

@@ -48,7 +48,7 @@ def parse_args() -> argparse.Namespace:
     )
 
     # Model
-    p.add_argument("--model", default="resnet18", choices=["resnet18", "resnet50"],
+    p.add_argument("--model", default="resnet18", choices=["resnet18", "resnet34", "resnet50"],
                    help="Student model architecture. Use resnet50 for teacher training.")
 
     # KD settings
@@ -71,6 +71,10 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--weight-decay", type=float, default=5e-4)
     p.add_argument("--momentum",     type=float, default=0.9)
 
+    # Data
+    p.add_argument("--data-dir", default="data",
+                   help="Root data directory containing train/ and test/ subdirs.")
+
     # Output
     p.add_argument("--output-dir",  default="runs/experiment")
     p.add_argument("--num-workers", type=int, default=4)
@@ -80,7 +84,7 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
-def build_dataloaders(batch_size: int, num_workers: int):
+def build_dataloaders(batch_size: int, num_workers: int, data_dir: str = "data"):
     mean = (0.4914, 0.4822, 0.4465)
     std  = (0.2470, 0.2435, 0.2616)
 
@@ -95,8 +99,8 @@ def build_dataloaders(batch_size: int, num_workers: int):
         T.Normalize(mean, std),
     ])
 
-    train_ds = torchvision.datasets.ImageFolder(root="data/train", transform=train_tf)
-    val_ds   = torchvision.datasets.ImageFolder(root="data/test",  transform=val_tf)
+    train_ds = torchvision.datasets.ImageFolder(root=f"{data_dir}/train", transform=train_tf)
+    val_ds   = torchvision.datasets.ImageFolder(root=f"{data_dir}/test",  transform=val_tf)
 
     train_loader = DataLoader(
         train_ds, batch_size=batch_size, shuffle=True,
@@ -115,6 +119,8 @@ def main() -> None:
     torch.manual_seed(args.seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(args.seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
     device = torch.device(args.device)
     logger.info(f"Device: {device}")
@@ -122,7 +128,7 @@ def main() -> None:
         logger.info(f"GPU: {torch.cuda.get_device_name(0)}")
 
     # ---- Data ----
-    train_loader, val_loader = build_dataloaders(args.batch_size, args.num_workers)
+    train_loader, val_loader = build_dataloaders(args.batch_size, args.num_workers, args.data_dir)
     logger.info(f"Train: {len(train_loader.dataset):,}  Val: {len(val_loader.dataset):,}")
 
     # ---- Models ----
@@ -139,7 +145,12 @@ def main() -> None:
             state = ckpt.get("model_state_dict", ckpt)
             teacher.load_state_dict(state)
         else:
-            logger.warning("No teacher weights — teacher uses random init.")
+            raise ValueError(
+                f"--teacher-weights is required when --kd-type='{args.kd_type}'. "
+                f"Train a teacher first:\n"
+                f"  python tools/train.py --model resnet50 --kd-type none "
+                f"--output-dir runs/teacher_r50_v2"
+            )
 
         model = KDModel(student=student, teacher=teacher)
     else:
@@ -151,8 +162,6 @@ def main() -> None:
         alpha=args.alpha,
         temperature=args.temperature,
         feat_beta=args.feat_beta,
-        student_channels=512,
-        teacher_channels=2048,
     )
 
     # ---- Optimizer ----

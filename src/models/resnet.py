@@ -25,6 +25,10 @@ class ResNet(nn.Module):
             base = tv_models.resnet18(
                 weights=tv_models.ResNet18_Weights.IMAGENET1K_V1 if pretrained else None
             )
+        elif variant == "resnet34":
+            base = tv_models.resnet34(
+                weights=tv_models.ResNet34_Weights.IMAGENET1K_V1 if pretrained else None
+            )
         elif variant == "resnet50":
             base = tv_models.resnet50(
                 weights=tv_models.ResNet50_Weights.IMAGENET1K_V2 if pretrained else None

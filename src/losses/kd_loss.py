@@ -23,14 +23,12 @@ class KDLoss(nn.Module):
     """Unified KD loss: α · L_kd + (1 - α) · L_ce.
 
     Args:
-        kd_type:          'logit', 'feature', or 'none'.
-        alpha:            Distillation weight in [0, 1].
-                          α=0 → pure cross-entropy (baseline)
-                          α=1 → pure distillation
-        temperature:      Softmax temperature T (logit KD only).
-        feat_beta:        Cosine similarity weight inside FeatureKD.
-        student_channels: Student layer4 output channels (feature KD only).
-        teacher_channels: Teacher layer4 output channels (feature KD only).
+        kd_type:     'logit', 'feature', or 'none'.
+        alpha:       Distillation weight in [0, 1].
+                     α=0 → pure cross-entropy (baseline)
+                     α=1 → pure distillation
+        temperature: Softmax temperature T (logit KD only).
+        feat_beta:   Cosine similarity weight inside FeatureKD.
     """
 
     def __init__(
@@ -39,8 +37,6 @@ class KDLoss(nn.Module):
         alpha: float = 0.5,
         temperature: float = 4.0,
         feat_beta: float = 0.5,
-        student_channels: int = 512,
-        teacher_channels: int = 2048,
     ):
         super().__init__()
         assert kd_type in ("logit", "feature", "none"), \
@@ -53,11 +49,7 @@ class KDLoss(nn.Module):
         if kd_type == "logit":
             self.kd_loss_fn = LogitKDLoss(temperature=temperature)
         elif kd_type == "feature":
-            self.kd_loss_fn = FeatureKDLoss(
-                student_channels=student_channels,
-                teacher_channels=teacher_channels,
-                beta=feat_beta,
-            )
+            self.kd_loss_fn = FeatureKDLoss(beta=feat_beta)
         else:
             self.kd_loss_fn = None
 

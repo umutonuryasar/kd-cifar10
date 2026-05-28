@@ -51,9 +51,8 @@ class Trainer:
         self.output_dir = Path(cfg.get("output_dir", "runs/experiment"))
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-        self.writer    = SummaryWriter(log_dir=str(self.output_dir / "tb_logs"))
-        self.best_acc  = 0.0
-        self.global_step = 0
+        self.writer   = SummaryWriter(log_dir=str(self.output_dir / "tb_logs"))
+        self.best_acc = 0.0
 
     def train(self, epochs: int) -> None:
         logger.info(f"Starting training for {epochs} epochs.")
@@ -131,7 +130,8 @@ class Trainer:
             )
 
             losses["loss_total"].backward()
-            nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
+            all_params = list(self.model.parameters()) + list(self.loss_fn.parameters())
+            nn.utils.clip_grad_norm_(all_params, 1.0)
             self.optimizer.step()
 
             for k, v in losses.items():
@@ -140,8 +140,6 @@ class Trainer:
             preds = student_logits.argmax(dim=1)
             correct += (preds == labels).sum().item()
             total   += labels.size(0)
-
-            self.global_step += 1
 
         n = len(self.train_loader)
         avg = {k: v / n for k, v in running.items()}
