@@ -5,6 +5,9 @@ ResNet-50 (teacher) into ResNet-18 (student) on CIFAR-10.
 
 > **Paper:** *Knowledge Distillation for Image Classification: A Systematic Ablation of
 > Logit-KD and Feature-KD on CIFAR-10* — [docs/CS229_Paper.pdf](docs/)
+
+> **Note:** This repository contains the original CS229 project implementation. Two bugs were identified post-submission and are documented in [ERRATA.md](ERRATA.md). A fully corrected reimplementation with systematic ablation results is available as an arXiv preprint: [arXiv:2605.31191](https://arxiv.org/abs/2605.31191).
+
 ---
 
 ## Overview
