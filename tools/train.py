@@ -19,7 +19,10 @@ python tools/train.py --kd-type feature --alpha 0.5 --output-dir runs/feature_a0
 import sys
 import argparse
 import logging
+import random
 from pathlib import Path
+
+import numpy as np
 
 import torch
 from torch.utils.data import DataLoader
@@ -116,6 +119,8 @@ def build_dataloaders(batch_size: int, num_workers: int, data_dir: str = "data")
 def main() -> None:
     args = parse_args()
 
+    random.seed(args.seed)
+    np.random.seed(args.seed)
     torch.manual_seed(args.seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(args.seed)
